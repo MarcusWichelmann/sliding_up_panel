@@ -227,12 +227,14 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
             : 1.0 //set the default panel state (i.e. set initial value of _ac)
         )
       ..addListener(() {
+        _scrollingEnabled = _isPanelOpen;
+
         if (widget.onPanelSlide != null) widget.onPanelSlide!(_ac.value);
 
-        if (widget.onPanelOpened != null && _ac.value == 1.0)
+        if (widget.onPanelOpened != null && _isPanelOpen)
           widget.onPanelOpened!();
 
-        if (widget.onPanelClosed != null && _ac.value == 0.0)
+        if (widget.onPanelClosed != null && _isPanelClosed)
           widget.onPanelClosed!();
       });
 
@@ -574,11 +576,13 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
 
   //close the panel
   Future<void> _close() {
+    _scrollingEnabled = false;
     return _ac.fling(velocity: -1.0);
   }
 
   //open the panel
   Future<void> _open() {
+    _scrollingEnabled = true;
     return _ac.fling(velocity: 1.0);
   }
 
@@ -634,11 +638,19 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
 
   //returns whether or not the
   //panel is open
-  bool get _isPanelOpen => _ac.value == 1.0;
+  bool get _isPanelOpen {
+    // allow 0.01 deviation to match
+    // AnimationController's _kFlingTolerance
+    return _ac.value >= 0.99;
+  }
 
   //returns whether or not the
   //panel is closed
-  bool get _isPanelClosed => _ac.value == 0.0;
+  bool get _isPanelClosed {
+    // allow 0.01 deviation to match
+    // AnimationController's _kFlingTolerance
+    return _ac.value <= 0.01;
+  }
 
   //returns whether or not the
   //panel is shown/hidden
